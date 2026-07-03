@@ -1,0 +1,16 @@
+# Python cache e arquivos temporários
+__pycache__/
+*.py[cod]
+*$*
+.vscode/
+.idea/
+
+# Planilhas de dados locais (evita subir base de dados ou resultados ao GitHub)
+*.xlsx
+aprovados.xlsx
+rejeitados.xlsx
+articles.xlsx
+articlesTeste.xlsx
+
+# Arquivos temporários do Streamlit
+.streamlit/
