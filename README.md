@@ -8,8 +8,15 @@ A ferramenta permite analisar de forma automatizada e flexível os elementos tex
 
 ## 🚀 Como Executar a Aplicação
 
-### Opção A: Execução Local
-1. **Instale as dependências** necessárias executando o comando abaixo no terminal:
+### 🌐 Acesso Online (Recomendado)
+A aplicação está publicada na nuvem e pronta para uso! Acesse diretamente pelo link:
+👉 **[triagem-parsifal.streamlit.app](https://triagem-parsifal.streamlit.app/)**
+
+---
+
+### 💻 Execução Local (Opcional)
+Caso queira executar a ferramenta localmente na sua máquina:
+1. **Instale as dependências** necessárias:
    ```bash
    pip install -r requirements.txt
    ```
@@ -17,13 +24,7 @@ A ferramenta permite analisar de forma automatizada e flexível os elementos tex
    ```bash
    streamlit run app.py
    ```
-3. A aplicação abrirá automaticamente no seu navegador no endereço: `http://localhost:8501`.
-
-### Opção B: Publicação no Streamlit Community Cloud (Nuvem)
-1. Suba este repositório para a sua conta no **GitHub**.
-2. Acesse [share.streamlit.io](https://share.streamlit.io/) e faça login com seu GitHub.
-3. Clique em **"New app"**, selecione este repositório, a branch (ex: `main`) e o arquivo principal **`app.py`**.
-4. Clique em **"Deploy!"** e aguarde a inicialização. A plataforma gerará um link público e gratuito para seu app.
+3. A aplicação abrirá automaticamente no endereço: `http://localhost:8501`.
 
 ---
 
