@@ -6,6 +6,75 @@ import re
 import os
 from triagem_rsl import executar_triagem, DEFAULT_RULES, COLS_SAIDA
 
+def highlight_text(text: str, rules: list, field_name: str) -> str:
+    """
+    Encontra as ocorrências das regras ativas no texto e as destaca com marca-texto HTML.
+    Mescla trechos sobrepostos para evitar tags HTML corrompidas.
+    """
+    if not isinstance(text, str) or not text:
+        return ""
+    
+    spans = []
+    for r in rules:
+        fields = r.get("fields", [])
+        if field_name not in fields:
+            continue
+        
+        pattern_str = r["pattern"]
+        if not pattern_str:
+            continue
+        
+        try:
+            # Busca insensível a maiúsculas/minúsculas
+            pattern = re.compile(pattern_str, re.IGNORECASE)
+            for match in pattern.finditer(text):
+                start, end = match.span()
+                # Exclusão em vermelho/coral, Inclusão em verde/teal
+                color = "#f8d7da" if r["type"] == "exclusion" else "#d1e7dd"
+                label = r["id"]
+                spans.append((start, end, color, label))
+        except Exception:
+            pass
+            
+    if not spans:
+        return text
+        
+    # Ordena spans por início, e depois por fim decrescente
+    spans.sort(key=lambda x: (x[0], -x[1]))
+    
+    # Mescla spans sobrepostos
+    merged_spans = []
+    for current in spans:
+        if not merged_spans:
+            merged_spans.append(current)
+        else:
+            last_start, last_end, last_color, last_label = merged_spans[-1]
+            curr_start, curr_end, curr_color, curr_label = current
+            if curr_start < last_end:
+                # Sobreposição: estende o fim e prioriza a cor de exclusão
+                new_end = max(last_end, curr_end)
+                new_color = "#f8d7da" if (last_color == "#f8d7da" or curr_color == "#f8d7da") else "#d1e7dd"
+                new_label = f"{last_label}+{curr_label}"
+                merged_spans[-1] = (last_start, new_end, new_color, new_label)
+            else:
+                merged_spans.append(current)
+                
+    # Reconstrói a string injetando as tags de marcação HTML
+    result = []
+    last_idx = 0
+    for start, end, color, label in merged_spans:
+        result.append(text[last_idx:start])
+        matched_text = text[start:end]
+        result.append(
+            f'<mark style="background-color: {color}; color: #212529; border-radius: 4px; padding: 2px 4px; font-weight: 500;" title="Regra: {label}">'
+            f'{matched_text}'
+            f'<sub style="font-size: 0.7em; margin-left: 2px; opacity: 0.8; font-weight: bold;">{label}</sub>'
+            f'</mark>'
+        )
+        last_idx = end
+    result.append(text[last_idx:])
+    return "".join(result)
+
 # Configurações da página
 st.set_page_config(
     page_title="Triador RSL Parsifal",
@@ -160,7 +229,24 @@ tab_regras, tab_execucao, tab_estatisticas = st.tabs([
 # ── TAB 1: CONFIGURAÇÃO DE REGRAS ──────────────────────────────────────────
 with tab_regras:
     st.subheader("Gerenciar Critérios de Inclusão e Exclusão")
-    st.write("Abaixo você pode editar as expressões regulares (regex) de cada regra, seu tipo e em quais colunas realizar a busca.")
+    st.write("Abaixo você pode visualizar o resumo das regras ativas, editar suas expressões regulares (regex), tipos e campos de busca.")
+    
+    # Tabela de resumo das regras ativas para visualização rápida
+    if st.session_state.rules:
+        summary_data = []
+        for r in st.session_state.rules:
+            summary_data.append({
+                "ID": r["id"],
+                "Nome": r["name"],
+                "Tipo": "❌ Exclusão" if r["type"] == "exclusion" else "✅ Inclusão",
+                "Campos de Busca": ", ".join(r.get("fields", [])),
+                "Expressão Regular (Regex)": r["pattern"]
+            })
+        st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
+    else:
+        st.info("Nenhuma regra configurada.")
+        
+    st.write("---")
     
     # Formato do editor de regras
     rules_to_delete = []
@@ -351,6 +437,121 @@ with tab_execucao:
                 st.dataframe(rejeitados, use_container_width=True)
             else:
                 st.write("Nenhum artigo rejeitado.")
+                
+            st.markdown("---")
+            st.subheader("🔍 Inspetor e Validador de Artigos")
+            st.write("Selecione qualquer artigo triado abaixo para ver um diagnóstico detalhado e o destaque em tempo real dos termos que ativaram os critérios de inclusão/exclusão.")
+            
+            # Preparar DataFrame consolidado de artigos processados
+            ap_temp = aprovados.copy()
+            ap_temp["status"] = "APROVADO"
+            ap_temp["motivo_rejeicao"] = ""
+            
+            rej_temp = rejeitados.copy()
+            rej_temp["status"] = "REJEITADO"
+            
+            df_total = pd.concat([ap_temp, rej_temp], ignore_index=True)
+            
+            if not df_total.empty:
+                # Criar labels legíveis para o dropdown de busca
+                options_list = df_total.index.tolist()
+                def obter_label(idx):
+                    status = df_total.loc[idx, "status"]
+                    title = df_total.loc[idx, "title"]
+                    short_title = title[:100] + "..." if len(str(title)) > 100 else title
+                    icon = "🟢" if status == "APROVADO" else "🔴"
+                    return f"{icon} [{status}] {short_title}"
+                
+                artigo_selecionado = st.selectbox(
+                    "Selecione um artigo para analisar os termos:",
+                    options=options_list,
+                    format_func=obter_label
+                )
+                
+                if artigo_selecionado is not None:
+                    row = df_total.loc[artigo_selecionado]
+                    status_val = row["status"]
+                    
+                    with st.container(border=True):
+                        # Cabeçalho com status badge
+                        col_status, col_empty = st.columns([1, 4])
+                        with col_status:
+                            if status_val == "APROVADO":
+                                st.markdown('<span style="background-color: #d1e7dd; color: #0f5132; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.9em;">🟢 APROVADO</span>', unsafe_allow_html=True)
+                            else:
+                                st.markdown(f'<span style="background-color: #f8d7da; color: #842029; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.9em;">🔴 REJEITADO</span>', unsafe_allow_html=True)
+                        
+                        st.markdown(f"### {row['title']}")
+                        
+                        # Metadados do artigo
+                        c_auth, c_year, c_doi = st.columns(3)
+                        c_auth.write(f"**Autor(es):** {row.get('author', 'N/A')}")
+                        c_year.write(f"**Ano:** {row.get('year', 'N/A')}")
+                        c_doi.write(f"**DOI:** {row.get('doi', 'N/A')}")
+                        
+                        st.write("---")
+                        
+                        # Diagnóstico individual de regras
+                        st.markdown("#### 📋 Diagnóstico das Regras de Triagem")
+                        
+                        for r in st.session_state.rules:
+                            r_id = r["id"]
+                            r_name = r["name"]
+                            r_type = r["type"]
+                            r_fields = r.get("fields", ["title", "abstract", "author_keywords", "keywords"])
+                            
+                            # Avaliar se a regra coincidiu no texto consolidado desse artigo específico
+                            existing_fields = [f for f in r_fields if f in row.index]
+                            consolidated = " ".join([str(row[f]) for f in existing_fields if pd.notna(row[f])]).lower()
+                            
+                            pattern_str = r["pattern"]
+                            matched = False
+                            if pattern_str:
+                                try:
+                                    pattern = re.compile(pattern_str, re.IGNORECASE)
+                                    matched = bool(pattern.search(consolidated))
+                                except Exception:
+                                    pass
+                            
+                            # Mostrar status detalhado da regra
+                            if r_type == "exclusion":
+                                if matched:
+                                    st.error(f"❌ **{r_id} - {r_name}** (Critério de Exclusão): **VIOLADO** (Termos de descarte encontrados no texto)")
+                                else:
+                                    st.success(f"✅ **{r_id} - {r_name}** (Critério de Exclusão): **PASSOU** (Nenhum termo indesejado encontrado)")
+                            else:  # inclusion
+                                if matched:
+                                    st.success(f"✅ **{r_id} - {r_name}** (Critério de Inclusão): **PASSOU** (Termos obrigatórios encontrados)")
+                                else:
+                                    st.error(f"❌ **{r_id} - {r_name}** (Critério de Inclusão): **VIOLADO** (Termos exigidos não encontrados)")
+                        
+                        st.write("---")
+                        
+                        # Exibição do Texto com Highlight
+                        st.markdown("#### 📄 Destaque de Termos Encontrados")
+                        st.caption("Legenda: marcação em vermelho claro 🔴 indica palavras de exclusão encontradas; marcação em verde claro 🟢 indica palavras de inclusão encontradas.")
+                        
+                        # Título com destaques
+                        h_title = highlight_text(str(row["title"]), st.session_state.rules, "title")
+                        st.markdown(f"**Título:**  \n{h_title}", unsafe_allow_html=True)
+                        st.write("")
+                        
+                        # Abstract com destaques
+                        if "abstract" in row.index and pd.notna(row["abstract"]):
+                            h_abstract = highlight_text(str(row["abstract"]), st.session_state.rules, "abstract")
+                            st.markdown(f"**Resumo (Abstract):**  \n<div style='text-align: justify; border-left: 3px solid #e0e0e0; padding-left: 10px; color: #4b5563;'>{h_abstract}</div>", unsafe_allow_html=True)
+                            st.write("")
+                        
+                        # Palavras-chave com destaques
+                        if "keywords" in row.index and pd.notna(row["keywords"]):
+                            h_kw = highlight_text(str(row["keywords"]), st.session_state.rules, "keywords")
+                            st.markdown(f"**Palavras-chave:** {h_kw}", unsafe_allow_html=True)
+                        
+                        if "author_keywords" in row.index and pd.notna(row["author_keywords"]):
+                            h_akw = highlight_text(str(row["author_keywords"]), st.session_state.rules, "author_keywords")
+                            st.markdown(f"**Palavras-chave do Autor:** {h_akw}", unsafe_allow_html=True)
+            else:
+                st.info("Nenhum artigo disponível para inspeção.")
 
 # ── TAB 3: ESTATÍSTICAS & RELATÓRIO ───────────────────────────────────────
 with tab_estatisticas:
