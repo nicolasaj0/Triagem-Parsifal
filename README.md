@@ -1,4 +1,4 @@
-# 🔍 Triador Automático de Revisão Sistemática (RSL) - Parsifal
+# 🔍 Triagem Automática de Revisão Sistemática (RSL) - Parsifal
 
 Este repositório contém uma ferramenta interativa desenvolvida em **Python** e **Streamlit** para facilitar e acelerar a etapa de **triagem (screening)** de artigos em Revisões Sistemáticas de Literatura (RSL), a partir de planilhas exportadas do **Parsifal**.
 
