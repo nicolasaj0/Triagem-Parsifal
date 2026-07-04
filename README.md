@@ -16,15 +16,20 @@ A aplicação está publicada na nuvem e pronta para uso! Acesse diretamente pel
 
 ### 💻 Execução Local (Opcional)
 Caso queira executar a ferramenta localmente na sua máquina:
-1. **Instale as dependências** necessárias:
+1. **Clone o repositório** ou faça o download dos arquivos:
+   ```bash
+   git clone https://github.com/nicolasaj0/Triagem-Parsifal.git
+   cd Triagem-Parsifal
+   ```
+2. **Instale as dependências** necessárias:
    ```bash
    pip install -r requirements.txt
    ```
-2. **Inicie o servidor local** do Streamlit:
+3. **Inicie o servidor local** do Streamlit:
    ```bash
    streamlit run app.py
    ```
-3. A aplicação abrirá automaticamente no endereço: `http://localhost:8501`.
+4. A aplicação abrirá automaticamente no endereço: `http://localhost:8501`.
 
 ---
 
