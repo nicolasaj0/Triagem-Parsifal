@@ -179,11 +179,16 @@ def executar_triagem(
 
 
 def main() -> None:
-    if not os.path.exists(INPUT_FILE):
-        print(f"Erro: O arquivo de entrada '{INPUT_FILE}' não foi encontrado.")
-        return
+    input_file = INPUT_FILE
+    if not os.path.exists(input_file):
+        alternative = "articles.xls"
+        if os.path.exists(alternative):
+            input_file = alternative
+        else:
+            print(f"Erro: O arquivo de entrada '{input_file}' ou '{alternative}' não foi encontrado.")
+            return
 
-    df = pd.read_excel(INPUT_FILE)
+    df = pd.read_excel(input_file)
     
     # Executa a triagem com as regras padrão
     resultado = executar_triagem(

@@ -136,8 +136,8 @@ with st.sidebar:
     # 1. Upload da Planilha do Parsifal
     st.subheader("1. Base de Artigos")
     uploaded_file = st.file_uploader(
-        "Selecione o arquivo Excel do Parsifal (.xlsx)",
-        type=["xlsx"],
+        "Selecione o arquivo Excel do Parsifal (.xlsx, .xls)",
+        type=["xlsx", "xls"],
         help="Planilha contendo os artigos exportados do Parsifal."
     )
     
