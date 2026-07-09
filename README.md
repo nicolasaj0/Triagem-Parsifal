@@ -29,7 +29,6 @@ Caso queira executar a ferramenta localmente na sua máquina:
    ```bash
    streamlit run app.py
    ```
-4. A aplicação abrirá automaticamente no endereço: `http://localhost:8501`.
 
 ---
 
