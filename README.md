@@ -34,7 +34,7 @@ Caso queira executar a ferramenta localmente na sua máquina:
 
 ## 🛠️ Funcionalidades Principais
 
-* 📥 **Upload de Planilha**: Carregue o arquivo Excel nos formatos `.xlsx` ou `.xls` gerados pelo Parsifal contendo os artigos não classificados.
+* 📥 **Upload de Planilha**: Carregue o arquivo Excel nos formatos `.xls` ou `.xlsx` gerados pelo Parsifal contendo os artigos não classificados.
 * ⚙️ **Configuração Dinâmica de Regras**:
   * **Critérios de Exclusão (EX)**: Se a expressão regular for encontrada no texto consolidado, o artigo é automaticamente rejeitado.
   * **Critérios de Inclusão (IN)**: Se a expressão regular não for encontrada, o artigo é rejeitado.
