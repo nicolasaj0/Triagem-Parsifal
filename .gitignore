@@ -4,9 +4,12 @@ __pycache__/
 *$*
 .vscode/
 .idea/
+.pytest_cache/
 
 # Planilhas de dados locais (evita subir base de dados ou resultados ao GitHub)
 *.xlsx
+*.xls
+*.csv
 aprovados.xlsx
 rejeitados.xlsx
 articles.xlsx
