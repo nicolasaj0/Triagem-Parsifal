@@ -15,5 +15,6 @@ rejeitados.xlsx
 articles.xlsx
 articlesTeste.xlsx
 
-# Arquivos temporários do Streamlit
-.streamlit/
+# Arquivos do Streamlit (mantém config.toml para deploy na nuvem)
+.streamlit/*
+!.streamlit/config.toml
