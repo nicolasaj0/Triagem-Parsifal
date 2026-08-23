@@ -127,12 +127,14 @@ def executar_triagem(
 
     for rule in rules:
         fields = rule.get("fields", ["title", "abstract", "author_keywords", "keywords"])
-        existing_fields = tuple(sorted([f for f in fields if f in df_clean.columns]))
+        # Preserva a ordem original dos campos especificados na regra (ex: title antes de abstract)
+        existing_fields = tuple([f for f in fields if f in df_clean.columns])
 
         if existing_fields not in consolidated_cache:
             if existing_fields:
+                # Garante que NaNs virem string vazia sem gerar literais 'nan' ou 'None'
                 consolidated_cache[existing_fields] = (
-                    df_clean[list(existing_fields)].astype(str).replace("nan", "").fillna("").agg(" ".join, axis=1).str.lower()
+                    df_clean[list(existing_fields)].fillna("").astype(str).agg(" ".join, axis=1).str.lower()
                 )
             else:
                 consolidated_cache[existing_fields] = pd.Series("", index=df_clean.index)
