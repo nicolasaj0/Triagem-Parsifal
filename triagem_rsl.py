@@ -132,24 +132,25 @@ def executar_triagem(
         if existing_fields not in consolidated_cache:
             if existing_fields:
                 consolidated_cache[existing_fields] = (
-                    df_clean[list(existing_fields)].fillna("").agg(" ".join, axis=1).str.lower()
+                    df_clean[list(existing_fields)].astype(str).replace("nan", "").fillna("").agg(" ".join, axis=1).str.lower()
                 )
             else:
                 consolidated_cache[existing_fields] = pd.Series("", index=df_clean.index)
 
         consolidated_text = consolidated_cache[existing_fields]
         rule_id = rule["id"]
-        pattern_str = rule.get("pattern", "")
+        pattern_str = str(rule.get("pattern", "")).strip()
+        is_excl = str(rule.get("type", "")).strip().lower() in ["exclusion", "exclusao", "exclusão", "ex"]
 
-        if pattern_str and pattern_str.strip():
+        if pattern_str:
             try:
                 pattern = re.compile(pattern_str, re.IGNORECASE | re.MULTILINE)
                 matches = consolidated_text.str.contains(pattern, regex=True, na=False)
             except Exception:
-                # Se regex for inválida, considera que não encontrou correspondência
-                matches = pd.Series(False, index=df_clean.index)
+                # Se regex for inválida, exclusão não descarta e inclusão não penaliza
+                matches = pd.Series(False if is_excl else True, index=df_clean.index)
         else:
-            matches = pd.Series(False, index=df_clean.index)
+            matches = pd.Series(False if is_excl else True, index=df_clean.index)
 
         df_clean[f"_match_{rule_id}"] = matches
 
@@ -160,10 +161,10 @@ def executar_triagem(
     for rule in rules:
         rule_id = rule["id"]
         rule_name = rule["name"]
-        rule_type = rule["type"]
+        is_excl = str(rule.get("type", "")).strip().lower() in ["exclusion", "exclusao", "exclusão", "ex"]
         matches_series = df_clean[f"_match_{rule_id}"].values
 
-        if rule_type == "exclusion":
+        if is_excl:
             for i, matched in enumerate(matches_series):
                 if matched:
                     rejeicoes_por_linha[i].append(f"{rule_id} ({rule_name})")
@@ -207,9 +208,9 @@ def executar_triagem(
     regra_stats = {}
     for rule in rules:
         rule_id = rule["id"]
-        rule_type = rule["type"]
+        is_excl = str(rule.get("type", "")).strip().lower() in ["exclusion", "exclusao", "exclusão", "ex"]
         matches = df_clean[f"_match_{rule_id}"]
-        if rule_type == "exclusion":
+        if is_excl:
             regra_stats[rule_id] = int(matches.sum())
         else:
             regra_stats[rule_id] = int((~matches).sum())

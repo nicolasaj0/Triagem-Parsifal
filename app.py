@@ -72,9 +72,33 @@ def inject_custom_css():
         }
 
         /* ── RESET TIPOGRÁFICO & BASE ── */
-        html, body, [class*="css"], .stMarkdown, .stText, p, span, label, li {
-            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        html, body, .stApp {
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             color: var(--text-primary);
+        }
+
+        .stMarkdown, .stText, p, label, li, h1, h2, h3, h4, h5, h6, input, textarea, select {
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-primary);
+        }
+
+        /* ── PRESERVAR ÍCONES NATIVOS DO STREAMLIT (MATERIAL SYMBOLS & ICONS) ── */
+        [data-testid="stIconMaterial"],
+        [data-testid="stExpanderIcon"],
+        .material-symbols-rounded,
+        .material-symbols-sharp,
+        .material-symbols-outlined,
+        [class*="material-symbols"],
+        [class*="IconMaterial"] {
+            font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons', sans-serif !important;
+            font-style: normal;
+            font-weight: normal;
+            line-height: 1;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
         }
 
         code, pre, kbd, samp {
@@ -695,9 +719,22 @@ def highlight_text(text: str, rules: list, field_name: str) -> str:
     return "".join(result)
 
 
+# ── FUNÇÕES AUXILIARES DE ESTADO & WIDGETS ────────────────────────────────────
+def limpar_chaves_widgets_regras():
+    """Limpa chaves de widgets de regras do session_state para evitar estados zumbis."""
+    keys_to_del = [k for k in list(st.session_state.keys()) if any(k.startswith(p) for p in ["id_", "type_", "name_", "pattern_", "fields_", "del_"])]
+    for k in keys_to_del:
+        del st.session_state[k]
+
+
 # ── INICIALIZAÇÃO DE ESTADO DA SESSÃO ─────────────────────────────────────────
-if "rules" not in st.session_state:
+if "rules" not in st.session_state or not isinstance(st.session_state.rules, list):
     st.session_state.rules = json.loads(json.dumps(DEFAULT_RULES))
+else:
+    # Garante normalização de tipos em qualquer estado existente
+    for r in st.session_state.rules:
+        is_excl = str(r.get("type", "")).strip().lower() in ["exclusion", "exclusao", "exclusão", "ex"]
+        r["type"] = "exclusion" if is_excl else "inclusion"
 
 if "resultados" not in st.session_state:
     st.session_state.resultados = None
@@ -851,7 +888,11 @@ with st.sidebar:
         try:
             rules_data = json.load(uploaded_rules)
             if isinstance(rules_data, list) and all(isinstance(r, dict) and "id" in r and "pattern" in r for r in rules_data):
+                for r in rules_data:
+                    is_excl = str(r.get("type", "")).strip().lower() in ["exclusion", "exclusao", "exclusão", "ex"]
+                    r["type"] = "exclusion" if is_excl else "inclusion"
                 st.session_state.rules = rules_data
+                limpar_chaves_widgets_regras()
                 st.success("Perfil de regras importado com sucesso.")
                 st.rerun()
             else:
@@ -861,6 +902,7 @@ with st.sidebar:
 
     if st.button("Restaurar Regras Padrão", use_container_width=True):
         st.session_state.rules = json.loads(json.dumps(DEFAULT_RULES))
+        limpar_chaves_widgets_regras()
         st.success("Regras redefinidas para a configuração original.")
         st.rerun()
 
@@ -890,7 +932,8 @@ with tab_regras:
     if st.session_state.rules:
         summary_data = []
         for r in st.session_state.rules:
-            tipo_label = "Exclusão" if r["type"] == "exclusion" else "Inclusão"
+            is_excl = str(r.get("type", "")).strip().lower() in ["exclusion", "exclusao", "exclusão", "ex"]
+            tipo_label = "Exclusão" if is_excl else "Inclusão"
             summary_data.append({
                 "ID": r["id"],
                 "Nome do Critério": r["name"],
@@ -967,10 +1010,11 @@ with tab_regras:
         rule_id = rule["id"]
         rule_name = rule["name"]
         rule_type = rule["type"]
+        is_excl = str(rule_type).strip().lower() in ["exclusion", "exclusao", "exclusão", "ex"]
         rule_pattern = rule.get("pattern", "")
         rule_fields = rule.get("fields", ["title", "abstract", "author_keywords", "keywords"])
 
-        tipo_badge = "Exclusão" if rule_type == "exclusion" else "Inclusão"
+        tipo_badge = "Exclusão" if is_excl else "Inclusão"
         with st.expander(f"[{rule_id}] {rule_name} — {tipo_badge}", expanded=False):
             c1, c2 = st.columns([1, 2])
             with c1:
@@ -979,7 +1023,7 @@ with tab_regras:
                     "Tipo de Ação",
                     options=["exclusion", "inclusion"],
                     format_func=lambda x: "Exclusão (Se encontrar no texto, descarta)" if x == "exclusion" else "Inclusão (Se não encontrar, descarta)",
-                    index=0 if rule_type == "exclusion" else 1,
+                    index=0 if is_excl else 1,
                     key=f"type_{i}"
                 )
             with c2:
@@ -1010,6 +1054,7 @@ with tab_regras:
     if rules_to_delete:
         for idx in sorted(rules_to_delete, reverse=True):
             st.session_state.rules.pop(idx)
+        limpar_chaves_widgets_regras()
         st.rerun()
 
     st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
@@ -1055,6 +1100,7 @@ with tab_regras:
                     "fields": add_fields
                 }
                 st.session_state.rules.append(new_rule)
+                limpar_chaves_widgets_regras()
                 st.success(f"Critério '{add_id}' cadastrado com sucesso.")
                 st.rerun()
 
