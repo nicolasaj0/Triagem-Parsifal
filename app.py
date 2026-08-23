@@ -18,81 +18,586 @@ from triagem_rsl import (
 
 # ── CONFIGURAÇÃO DA PÁGINA ───────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Triador RSL Parsifal - Screening Inteligente",
-    page_icon="🔍",
+    page_title="Triador RSL — Mesa de Revisão Científica",
+    page_icon="📜",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ── ESTILIZAÇÃO CSS AVANÇADA COM SUPORTE A TEMA CLARO/ESCURO ───────────────────
-st.markdown("""
-<style>
-    /* Tipografia e Títulos */
-    .main-header {
-        font-size: 2.1rem;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        background: linear-gradient(120deg, #1d4ed8, #0ea5e9, #6366f1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
-    }
-    .sub-header {
-        font-size: 1.05rem;
-        color: #64748b;
-        margin-bottom: 1.5rem;
-    }
-    
-    /* Cards de Estatísticas & Regras */
-    .metric-card {
-        border-radius: 10px;
-        padding: 1rem 1.25rem;
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        background: #ffffff;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        margin-bottom: 0.75rem;
-    }
-    
-    .badge-approved {
-        background-color: #dcfce7;
-        color: #15803d;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        display: inline-block;
-    }
-    .badge-rejected {
-        background-color: #fee2e2;
-        color: #b91c1c;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        display: inline-block;
-    }
-    
-    /* Suporte a Tema Escuro */
-    @media (prefers-color-scheme: dark) {
-        .metric-card {
-            background: #1e293b;
-            border-color: #334155;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+# ── DESIGN SYSTEM CENTRALIZADO: MESA DE REVISÃO CIENTÍFICA ───────────────────
+def inject_custom_css():
+    st.markdown("""
+    <style>
+        /* ── IMPORTAÇÃO DA FAMÍLIA IBM PLEX COMPLETA ── */
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap');
+
+        /* ── TOKENS DO DESIGN SYSTEM (MESA DE REVISÃO) ── */
+        :root {
+            --desk-bg: #171310;
+            --paper-surface: #211C16;
+            --paper-surface-hover: #2B241C;
+            --card-border: #38301F;
+            --card-border-subtle: #2C251B;
+            --card-border-focus: #8FB0D1;
+
+            --text-primary: #EDE7DB;
+            --text-muted: #A89C8A;
+            --text-dim: #7A6F5F;
+
+            --ink-approved-strong: #2F5A42;
+            --ink-approved-text: #8FBF9E;
+            --ink-approved-bg: rgba(47, 90, 66, 0.28);
+            --ink-approved-border: rgba(143, 191, 158, 0.45);
+
+            --ink-rejected-strong: #7A2E28;
+            --ink-rejected-text: #DF978B;
+            --ink-rejected-bg: rgba(122, 46, 40, 0.28);
+            --ink-rejected-border: rgba(223, 151, 139, 0.45);
+
+            --ink-accent-strong: #2E4A6B;
+            --ink-accent-text: #8FB0D1;
+            --ink-accent-bg: rgba(46, 74, 107, 0.32);
+            --ink-accent-border: rgba(143, 176, 209, 0.45);
+
+            --sp-1: 4px;
+            --sp-2: 8px;
+            --sp-3: 12px;
+            --sp-4: 16px;
+            --sp-5: 24px;
+            --sp-6: 32px;
+
+            --radius-sm: 2px;
+            --radius-md: 4px;
         }
-        .sub-header {
-            color: #94a3b8;
+
+        /* ── RESET TIPOGRÁFICO & BASE ── */
+        html, body, [class*="css"], .stMarkdown, .stText, p, span, label, li {
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            color: var(--text-primary);
         }
-        .badge-approved {
-            background-color: #064e3b;
-            color: #6ee7b7;
+
+        code, pre, kbd, samp {
+            font-family: 'IBM Plex Mono', monospace !important;
         }
-        .badge-rejected {
-            background-color: #7f1d1d;
-            color: #fca5a5;
+
+        /* ── ACESSIBILIDADE: ESTADO DE FOCO VISÍVEL VIA TECLADO ── */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        [tabindex="0"]:focus-visible,
+        [data-baseweb="tab"]:focus-visible,
+        [data-baseweb="select"]:focus-visible {
+            outline: 2px solid var(--ink-accent-text) !important;
+            outline-offset: 2px !important;
         }
-    }
-</style>
-""", unsafe_allow_html=True)
+
+        /* ── CABEÇALHO INSTITUCIONAL ── */
+        .brand-container {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--sp-4);
+            padding: var(--sp-3) 0 var(--sp-4) 0;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: var(--sp-5);
+        }
+
+        .brand-icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: var(--paper-surface);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            color: var(--ink-accent-text);
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .brand-title {
+            font-family: 'IBM Plex Serif', Georgia, serif !important;
+            font-size: 1.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            margin-top: var(--sp-1);
+            line-height: 1.4;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--sp-1);
+            background: var(--ink-accent-bg);
+            border: 1px solid var(--ink-accent-border);
+            color: var(--ink-accent-text);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            margin-left: var(--sp-2);
+            vertical-align: middle;
+        }
+
+        /* ── SIDEBAR: TRILHA DE PROGRESSO VERTICAL ── */
+        section[data-testid="stSidebar"] {
+            background-color: var(--desk-bg) !important;
+            border-right: 1px solid var(--card-border) !important;
+        }
+
+        .sidebar-header {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+            padding-bottom: var(--sp-3);
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: var(--sp-4);
+        }
+
+        .trail-step-header {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-3);
+            margin-top: var(--sp-3);
+            margin-bottom: var(--sp-2);
+        }
+
+        .trail-step-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--paper-surface);
+            border: 1.5px solid var(--card-border);
+            color: var(--text-muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .trail-step-badge.active {
+            border-color: var(--ink-accent-text);
+            color: var(--ink-accent-text);
+            background: var(--ink-accent-bg);
+        }
+
+        .trail-step-badge.done {
+            border-color: var(--ink-approved-text);
+            color: var(--ink-approved-text);
+            background: var(--ink-approved-bg);
+        }
+
+        .trail-step-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+
+        .trail-divider {
+            height: 1px;
+            background: var(--card-border);
+            margin: var(--sp-4) 0;
+        }
+
+        /* ── ABAS EM FORMATO DE PASTAS DE DOSSIÊ SUSPENSAS ── */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 4px !important;
+            background-color: transparent !important;
+            border-bottom: 1px solid var(--card-border) !important;
+            padding-bottom: 0px !important;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            background-color: var(--desk-bg) !important;
+            border: 1px solid var(--card-border) !important;
+            border-bottom: 1px solid var(--card-border) !important;
+            border-radius: 4px 4px 0 0 !important;
+            padding: 8px 18px !important;
+            color: var(--text-muted) !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-size: 0.9rem !important;
+            font-weight: 500 !important;
+            transition: all 0.15s ease-in-out !important;
+            margin-bottom: -1px !important;
+        }
+
+        .stTabs [data-baseweb="tab"]:hover {
+            color: var(--text-primary) !important;
+            background-color: var(--paper-surface-hover) !important;
+        }
+
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            background-color: var(--paper-surface) !important;
+            color: var(--text-primary) !important;
+            border-top: 2px solid var(--ink-accent-text) !important;
+            border-bottom: 1px solid var(--paper-surface) !important;
+            font-weight: 600 !important;
+        }
+
+        .stTabs [data-baseweb="tab-border"] {
+            display: none !important;
+        }
+
+        .stTabs [data-baseweb="tab-panel"] {
+            padding-top: var(--sp-4) !important;
+        }
+
+        /* ── CARDS DE INDICADORES DE MÉTRICAS (PAINEL DE SCREENING) ── */
+        .metric-grid-card {
+            background: var(--paper-surface);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: var(--sp-3) var(--sp-4);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .metric-card-secondary {
+            border-left: 3px solid var(--card-border);
+        }
+
+        .metric-card-approved {
+            border: 1px solid var(--ink-approved-border);
+            border-left: 4px solid var(--ink-approved-text);
+            background: linear-gradient(180deg, var(--ink-approved-bg) 0%, var(--paper-surface) 100%);
+        }
+
+        .metric-card-rejected {
+            border: 1px solid var(--ink-rejected-border);
+            border-left: 4px solid var(--ink-rejected-text);
+            background: linear-gradient(180deg, var(--ink-rejected-bg) 0%, var(--paper-surface) 100%);
+        }
+
+        .metric-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: var(--sp-1);
+        }
+
+        .metric-value-mono {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-delta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--sp-1);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: var(--sp-2);
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            width: fit-content;
+        }
+
+        .metric-delta-approved {
+            background: var(--ink-approved-bg);
+            color: var(--ink-approved-text);
+            border: 1px solid var(--ink-approved-border);
+        }
+
+        .metric-delta-rejected {
+            background: var(--ink-rejected-bg);
+            color: var(--ink-rejected-text);
+            border: 1px solid var(--ink-rejected-border);
+        }
+
+        /* ── CARIMBO DE DECISÃO EDITORIAL (ELEMENTO DE ASSINATURA) ── */
+        .audit-stamp {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'IBM Plex Sans', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.84rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+            user-select: none;
+            line-height: 1;
+        }
+
+        .audit-stamp-approved {
+            color: var(--ink-approved-text);
+            background: var(--ink-approved-bg);
+            border: 1.5px solid var(--ink-approved-text);
+            box-shadow: inset 0 0 0 1px var(--ink-approved-bg), 0 1px 3px rgba(0, 0, 0, 0.4);
+            transform: rotate(-1.5deg);
+        }
+
+        .audit-stamp-rejected {
+            color: var(--ink-rejected-text);
+            background: var(--ink-rejected-bg);
+            border: 1.5px solid var(--ink-rejected-text);
+            box-shadow: inset 0 0 0 1px var(--ink-rejected-bg), 0 1px 3px rgba(0, 0, 0, 0.4);
+            transform: rotate(1.5deg);
+        }
+
+        /* ── FICHA CATALOGRÁFICA (INSPETOR DE ARTIGO) ── */
+        .catalog-card {
+            background: var(--paper-surface);
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--ink-accent-text);
+            border-radius: var(--radius-md);
+            padding: var(--sp-4) var(--sp-5);
+            margin-top: var(--sp-3);
+            margin-bottom: var(--sp-4);
+        }
+
+        .catalog-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: var(--sp-3);
+            margin-bottom: var(--sp-3);
+        }
+
+        .catalog-article-title {
+            font-family: 'IBM Plex Serif', Georgia, serif;
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .catalog-meta-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--sp-4);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: var(--sp-2) 0;
+            border-top: 1px solid var(--card-border-subtle);
+            border-bottom: 1px solid var(--card-border-subtle);
+            margin: var(--sp-3) 0;
+        }
+
+        .catalog-meta-item strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ── CHECKLIST COMPACTO DE AUDITORIA ── */
+        .audit-checklist {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-2);
+            margin: var(--sp-3) 0;
+        }
+
+        .audit-check-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--sp-2) var(--sp-3);
+            background: var(--desk-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+        }
+
+        .audit-check-left {
+            display: flex;
+            align-items: center;
+            gap: var(--sp-2);
+        }
+
+        .audit-rule-code {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+        }
+
+        .audit-rule-code.inclusion {
+            background: var(--ink-approved-bg);
+            color: var(--ink-approved-text);
+            border: 1px solid var(--ink-approved-border);
+        }
+
+        .audit-rule-code.exclusion {
+            background: var(--ink-rejected-bg);
+            color: var(--ink-rejected-text);
+            border: 1px solid var(--ink-rejected-border);
+        }
+
+        .audit-status-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .audit-status-tag.pass {
+            background: var(--ink-approved-bg);
+            color: var(--ink-approved-text);
+            border: 1px solid var(--ink-approved-border);
+        }
+
+        .audit-status-tag.violated {
+            background: var(--ink-rejected-bg);
+            color: var(--ink-rejected-text);
+            border: 1px solid var(--ink-rejected-border);
+        }
+
+        /* ── DOSSIÊ PRISMA 2020: DOCUMENT CARD ── */
+        .prisma-dossier-card {
+            background: var(--paper-surface);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin: var(--sp-3) 0;
+        }
+
+        .prisma-dossier-header {
+            background: var(--desk-bg);
+            border-bottom: 1px solid var(--card-border);
+            padding: var(--sp-3) var(--sp-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prisma-dossier-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-primary);
+        }
+
+        /* ── CONTAINER DE TEXTO COM RECUO EDITORIAL (ABSTRACT) ── */
+        .editorial-text-box {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.94rem;
+            line-height: 1.68;
+            color: var(--text-primary);
+            text-align: justify;
+            background: var(--desk-bg);
+            border: 1px solid var(--card-border-subtle);
+            border-left: 3px solid var(--ink-accent-text);
+            padding: var(--sp-3) var(--sp-4);
+            border-radius: var(--radius-sm);
+            margin-top: var(--sp-2);
+        }
+
+        /* ── ESTILOS NATIVOS DO STREAMLIT HARMONIZADOS ── */
+        div[data-testid="stExpander"] {
+            background-color: var(--paper-surface) !important;
+            border: 1px solid var(--card-border) !important;
+            border-radius: var(--radius-md) !important;
+            margin-bottom: var(--sp-3) !important;
+        }
+
+        div[data-testid="stExpander"] summary {
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-weight: 600 !important;
+            color: var(--text-primary) !important;
+        }
+
+        div[data-testid="stDataFrame"] {
+            border: 1px solid var(--card-border) !important;
+            border-radius: var(--radius-md) !important;
+            background-color: var(--paper-surface) !important;
+        }
+
+        .stButton>button {
+            border-radius: var(--radius-md) !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-weight: 600 !important;
+            transition: all 0.15s ease-in-out !important;
+        }
+
+        .stDownloadButton>button {
+            border-radius: var(--radius-md) !important;
+            font-family: 'IBM Plex Sans', sans-serif !important;
+            font-weight: 600 !important;
+        }
+
+        div[data-testid="stFileUploader"] {
+            background-color: var(--desk-bg) !important;
+            border: 1px dashed var(--card-border) !important;
+            border-radius: var(--radius-md) !important;
+            padding: var(--sp-2) !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# ── TEMPLATE GLOBAL COORDENADO PARA GRÁFICOS PLOTLY ──────────────────────────
+def aplicar_tema_plotly(fig: go.Figure) -> go.Figure:
+    """Aplica o design system analítico da Mesa de Revisão nos gráficos Plotly."""
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(
+            family="IBM Plex Sans, sans-serif",
+            color="#EDE7DB",
+            size=12
+        ),
+        margin=dict(l=20, r=20, t=30, b=20),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor="#2C251B",
+            zerolinecolor="#38301F",
+            tickfont=dict(family="IBM Plex Mono, monospace", color="#A89C8A", size=11),
+            titlefont=dict(color="#EDE7DB", size=12)
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#2C251B",
+            zerolinecolor="#38301F",
+            tickfont=dict(family="IBM Plex Mono, monospace", color="#A89C8A", size=11),
+            titlefont=dict(color="#EDE7DB", size=12)
+        ),
+        legend=dict(
+            font=dict(family="IBM Plex Sans, sans-serif", color="#EDE7DB", size=11),
+            bgcolor="rgba(33, 28, 22, 0.8)",
+            bordercolor="#38301F",
+            borderwidth=1
+        )
+    )
+    return fig
 
 
 # ── FUNÇÕES AUXILIARES COM CACHE ──────────────────────────────────────────────
@@ -118,8 +623,8 @@ def gerar_pacote_completo_excel(
 
 def highlight_text(text: str, rules: list, field_name: str) -> str:
     """
-    Destaca ocorrências de critérios ativos no texto com formatação visual.
-    Mescla trechos sobrepostos com segurança.
+    Destaca ocorrências de critérios no texto com estilo de marca-texto fluido,
+    utilizando box-decoration-break e sobrescrito discreto sem quebrar a linha.
     """
     if not isinstance(text, str) or not text:
         return ""
@@ -138,10 +643,12 @@ def highlight_text(text: str, rules: list, field_name: str) -> str:
             pattern = re.compile(pattern_str, re.IGNORECASE | re.MULTILINE)
             for match in pattern.finditer(text):
                 start, end = match.span()
-                color = "#fecaca" if r["type"] == "exclusion" else "#bbf7d0"
-                text_color = "#991b1b" if r["type"] == "exclusion" else "#166534"
-                label = r["id"]
-                spans.append((start, end, color, text_color, label))
+                is_excl = (r.get("type") == "exclusion")
+                bg_color = "rgba(122, 46, 40, 0.40)" if is_excl else "rgba(47, 90, 66, 0.40)"
+                text_color = "#DF978B" if is_excl else "#8FBF9E"
+                border_color = "#DF978B" if is_excl else "#8FBF9E"
+                label = r.get("id", "")
+                spans.append((start, end, bg_color, text_color, border_color, label))
         except Exception:
             pass
 
@@ -155,27 +662,32 @@ def highlight_text(text: str, rules: list, field_name: str) -> str:
         if not merged_spans:
             merged_spans.append(current)
         else:
-            last_start, last_end, last_color, last_text_color, last_label = merged_spans[-1]
-            curr_start, curr_end, curr_color, curr_text_color, curr_label = current
+            last_start, last_end, last_bg, last_tc, last_bc, last_label = merged_spans[-1]
+            curr_start, curr_end, curr_bg, curr_tc, curr_bc, curr_label = current
             if curr_start < last_end:
                 new_end = max(last_end, curr_end)
-                is_excl = (last_color == "#fecaca" or curr_color == "#fecaca")
-                new_color = "#fecaca" if is_excl else "#bbf7d0"
-                new_text_color = "#991b1b" if is_excl else "#166534"
+                is_excl = ("122, 46, 40" in last_bg or "122, 46, 40" in curr_bg)
+                new_bg = "rgba(122, 46, 40, 0.40)" if is_excl else "rgba(47, 90, 66, 0.40)"
+                new_tc = "#DF978B" if is_excl else "#8FBF9E"
+                new_bc = "#DF978B" if is_excl else "#8FBF9E"
                 new_label = f"{last_label}+{curr_label}"
-                merged_spans[-1] = (last_start, new_end, new_color, new_text_color, new_label)
+                merged_spans[-1] = (last_start, new_end, new_bg, new_tc, new_bc, new_label)
             else:
                 merged_spans.append(current)
 
     result = []
     last_idx = 0
-    for start, end, color, text_color, label in merged_spans:
+    for start, end, bg_color, text_color, border_color, label in merged_spans:
         result.append(text[last_idx:start])
         matched_text = text[start:end]
         result.append(
-            f'<mark style="background-color: {color}; color: {text_color}; border-radius: 4px; padding: 2px 5px; font-weight: 600;" title="Regra: {label}">'
+            f'<mark style="background-color: {bg_color}; color: {text_color}; '
+            f'border-bottom: 1.5px solid {border_color}; border-radius: 2px; padding: 1px 4px; '
+            f'box-decoration-break: clone; -webkit-box-decoration-break: clone; font-weight: 500;" '
+            f'title="Critério: {label}">'
             f'{matched_text}'
-            f'<sub style="font-size: 0.72em; margin-left: 3px; font-weight: 800;">{label}</sub>'
+            f'<sup style="font-family: \'IBM Plex Mono\', monospace; font-size: 0.68em; '
+            f'margin-left: 2px; font-weight: 700; opacity: 0.9; vertical-align: super;">{label}</sup>'
             f'</mark>'
         )
         last_idx = end
@@ -190,41 +702,105 @@ if "rules" not in st.session_state:
 if "resultados" not in st.session_state:
     st.session_state.resultados = None
 
+# Injetar regras de estilo centralizadas
+inject_custom_css()
 
-# ── CABEÇALHO PRINCIPAL ───────────────────────────────────────────────────────
-st.markdown('<div class="main-header">🔍 Triador Automático de RSL - Parsifal</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="sub-header">Filtre artigos, valide critérios de inclusão/exclusão por Expressões Regulares e gere relatórios no padrão PRISMA 2020.</div>',
-    unsafe_allow_html=True
-)
 
-# ── PAINEL LATERAL (SIDEBAR) ──────────────────────────────────────────────────
+# ── CABEÇALHO PRINCIPAL DA APLICAÇÃO ─────────────────────────────────────────
+st.markdown("""
+<div class="brand-container">
+    <div class="brand-icon-box">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+    </div>
+    <div>
+        <div style="display: flex; align-items: center; flex-wrap: wrap;">
+            <h1 class="brand-title">Triador RSL — Mesa de Revisão</h1>
+            <span class="brand-badge">PRISMA 2020</span>
+        </div>
+        <div class="brand-subtitle">
+            Auditoria bibliográfica automatizada por Expressões Regulares para Revisões Sistemáticas de Literatura.
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ── PAINEL LATERAL (SIDEBAR): TRILHA SEQUENCIAL DE SETUP ─────────────────────
 with st.sidebar:
-    st.header("⚙️ Painel de Controle")
+    st.markdown("""
+    <div class="sidebar-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        Painel de Setup & Protocolo
+    </div>
+    """, unsafe_allow_html=True)
 
     # 1. Base de Artigos
-    st.subheader("1. Importar Artigos")
     uploaded_file = st.file_uploader(
-        "Arquivo do Parsifal (.xlsx, .xls, .csv)",
+        "Importar Base de Artigos (.xlsx, .xls, .csv)",
         type=["xlsx", "xls", "csv"],
-        help="Planilha de artigos exportada do Parsifal, Scopus, IEEE ou base similar."
+        help="Planilha exportada do Parsifal, Scopus, IEEE Xplore, PubMed ou repositório similar."
     )
 
     columns_list = []
     df_uploaded = None
+    step1_class = "active"
+    step1_num = "1"
+
     if uploaded_file is not None:
         try:
             df_uploaded = carregar_base_artigos(uploaded_file)
             columns_list = df_uploaded.columns.tolist()
-            st.success(f"✅ Base carregada: **{len(df_uploaded)} artigos** ({len(columns_list)} colunas)")
+            step1_class = "done"
+            step1_num = "✓"
+            st.markdown(
+                f'<div style="font-family: \'IBM Plex Mono\', monospace; font-size: 0.78rem; color: var(--ink-approved-text); '
+                f'background: var(--ink-approved-bg); border: 1px solid var(--ink-approved-border); padding: 4px 8px; '
+                f'border-radius: 2px; margin-top: 4px;">'
+                f'● Base Carregada: <strong>{len(df_uploaded)} artigos</strong> ({len(columns_list)} colunas)'
+                f'</div>',
+                unsafe_allow_html=True
+            )
         except Exception as e:
             st.error(f"Erro ao ler arquivo: {e}")
 
-    st.markdown("---")
+    st.markdown(f"""
+    <div class="trail-step-header">
+        <div class="trail-step-badge {step1_class}">{step1_num}</div>
+        <div class="trail-step-title">Base de Artigos</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
     # 2. Configurações de Limpeza
-    st.subheader("2. Estratégias de Limpeza")
-    remover_duplicatas = st.checkbox("Remover Artigos Duplicados", value=True, help="Normaliza o texto da coluna de título para remover repetições.")
+    st.markdown("""
+    <div class="trail-step-header">
+        <div class="trail-step-badge active">2</div>
+        <div class="trail-step-title">Estratégias de Limpeza</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    remover_duplicatas = st.checkbox(
+        "Remover Artigos Duplicados",
+        value=True,
+        help="Normaliza o texto do título para consolidar entradas idênticas."
+    )
 
     coluna_dedup = "title"
     if remover_duplicatas:
@@ -236,24 +812,30 @@ with st.sidebar:
         )
 
     estrategia_doi = st.selectbox(
-        "Filtro de Artigos Sem DOI",
+        "Política de Registros Sem DOI",
         options=["remove", "flag", "ignore"],
         format_func=lambda x: {
-            "remove": "❌ Remover artigos sem DOI",
-            "flag": "⚠️ Apenas sinalizar no relatório",
-            "ignore": "⚙️ Ignorar verificação de DOI"
+            "remove": "Descartar artigos sem DOI",
+            "flag": "Sinalizar no relatório",
+            "ignore": "Ignorar verificação de DOI"
         }.get(x, x),
         index=0,
-        help="Define a política para registros sem código identificador DOI."
+        help="Define a tratativa para publicações sem código identificador DOI."
     )
 
-    st.markdown("---")
+    st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
-    # 3. Perfil de Regras
-    st.subheader("3. Perfis de Regras")
+    # 3. Perfis de Regras
+    st.markdown("""
+    <div class="trail-step-header">
+        <div class="trail-step-badge active">3</div>
+        <div class="trail-step-title">Perfis de Regras</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     rules_json_str = json.dumps(st.session_state.rules, indent=2, ensure_ascii=False)
     st.download_button(
-        label="📥 Exportar Regras (JSON)",
+        label="Exportar Perfil (JSON)",
         data=rules_json_str,
         file_name="perfil_regras_rsl.json",
         mime="application/json",
@@ -261,63 +843,78 @@ with st.sidebar:
     )
 
     uploaded_rules = st.file_uploader(
-        "Importar Regras (JSON)",
+        "Carregar Perfil Salvo (JSON)",
         type=["json"],
-        help="Carrega um conjunto de regras previamente salvo."
+        help="Importa um conjunto de critérios de inclusão e exclusão salvo em JSON."
     )
     if uploaded_rules is not None:
         try:
             rules_data = json.load(uploaded_rules)
             if isinstance(rules_data, list) and all(isinstance(r, dict) and "id" in r and "pattern" in r for r in rules_data):
                 st.session_state.rules = rules_data
-                st.success("Regras importadas com sucesso!")
+                st.success("Perfil de regras importado com sucesso.")
                 st.rerun()
             else:
-                st.error("Formato JSON de regras incompatível.")
+                st.error("Estrutura JSON de regras incompatível.")
         except Exception as e:
-            st.error(f"Erro ao processar JSON: {e}")
+            st.error(f"Erro ao processar arquivo JSON: {e}")
 
-    if st.button("🔄 Restaurar Regras Padrão", use_container_width=True):
+    if st.button("Restaurar Regras Padrão", use_container_width=True):
         st.session_state.rules = json.loads(json.dumps(DEFAULT_RULES))
-        st.success("Regras redefinidas para o padrão!")
+        st.success("Regras redefinidas para a configuração original.")
         st.rerun()
 
 
-# ── ABAS PRINCIPAIS ──────────────────────────────────────────────────────────
+# ── ABAS PRINCIPAIS: PASTAS DE DOSSIÊ SUSPENSAS ──────────────────────────────
 tab_regras, tab_execucao, tab_estatisticas = st.tabs([
-    "🛠️ Configuração de Filtros & Regex",
-    "⚡ Execução & Resultados",
-    "📊 Estatísticas & PRISMA 2020"
+    "1. Critérios & Validação Regex",
+    "2. Execução & Dossiê de Screening",
+    "3. Fluxo PRISMA 2020 & Estatísticas"
 ])
 
-# ── ABA 1: CONFIGURAÇÃO DE REGRAS & SANDBOX REGEX ─────────────────────────────
-with tab_regras:
-    st.subheader("Critérios de Inclusão e Exclusão")
-    st.caption("Adicione, edite e teste expressões regulares para classificar seus artigos de forma automatizada.")
 
-    # Resumo Geral das Regras Ativas
+# ── ABA 1: CONFIGURAÇÃO DE REGRAS & PLAYGROUND REGEX ──────────────────────────
+with tab_regras:
+    st.markdown("""
+    <div style="margin-bottom: var(--sp-4);">
+        <h3 style="font-family: 'IBM Plex Serif', serif; font-size: 1.25rem; font-weight: 600; margin: 0 0 var(--sp-1) 0;">
+            Critérios de Inclusão e Exclusão
+        </h3>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">
+            Defina e teste expressões regulares para classificar cada artigo automaticamente conforme o protocolo da RSL.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Resumo dos Critérios Ativos em Tabela
     if st.session_state.rules:
         summary_data = []
         for r in st.session_state.rules:
+            tipo_label = "Exclusão" if r["type"] == "exclusion" else "Inclusão"
             summary_data.append({
                 "ID": r["id"],
-                "Nome": r["name"],
-                "Tipo": "❌ Exclusão" if r["type"] == "exclusion" else "✅ Inclusão",
-                "Campos de Busca": ", ".join(r.get("fields", [])),
+                "Nome do Critério": r["name"],
+                "Ação": tipo_label,
+                "Campos Inspecionados": ", ".join(r.get("fields", [])),
                 "Expressão Regular (Regex)": r.get("pattern", "")
             })
         st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
     else:
-        st.warning("⚠️ Nenhuma regra ativa configurada.")
+        st.warning("Nenhum critério ativo cadastrado.")
 
-    # 🧪 TESTADOR / PLAYGROUND DE REGEX EM TEMPO REAL
-    with st.expander("🧪 Testador & Validador de Regex em Tempo Real", expanded=False):
-        st.write("Teste como suas expressões regulares se comportam contra textos reais de títulos ou resumos.")
-        
+    # ── SANDBOX INTERATIVO DE REGEX EM TEMPO REAL ──
+    with st.expander("Validador & Testador de Regex em Tempo Real", expanded=False):
+        st.markdown(
+            '<div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: var(--sp-3);">'
+            'Simule a captura da expressão regular contra um trecho de título ou resumo de amostra.'
+            '</div>',
+            unsafe_allow_html=True
+        )
+
         c_sand1, c_sand2 = st.columns([1, 1])
         with c_sand1:
             teste_regex = st.text_input("Expressão Regular para Teste", value="procedural|pcg|survey")
-            teste_tipo = st.radio("Tipo Simulado", ["Inclusão (Verde)", "Exclusão (Vermelho)"], horizontal=True)
+            teste_tipo = st.radio("Simular Comportamento", ["Inclusão (Retenção)", "Exclusão (Descarte)"], horizontal=True)
         with c_sand2:
             texto_exemplo_padrao = "We present a survey on procedural content generation (PCG) in digital games."
             teste_texto = st.text_area("Texto de Amostra para Avaliação", value=texto_exemplo_padrao, height=85)
@@ -326,10 +923,16 @@ with tab_regras:
             try:
                 comp_pattern = re.compile(teste_regex, re.IGNORECASE | re.MULTILINE)
                 ocorrencias = list(comp_pattern.finditer(teste_texto))
-                
-                st.success(f"✅ **Sintaxe Regex Válida!** Correspondências encontradas: **{len(ocorrencias)}**")
-                
-                # Destaca no texto do teste
+
+                st.markdown(
+                    f'<div style="font-family: \'IBM Plex Mono\', monospace; font-size: 0.82rem; color: var(--ink-approved-text); '
+                    f'background: var(--ink-approved-bg); border: 1px solid var(--ink-approved-border); padding: 6px 12px; '
+                    f'border-radius: 2px; margin: var(--sp-2) 0;">'
+                    f'Sintaxe Regex Válida • Correspondências encontradas: <strong>{len(ocorrencias)}</strong>'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+
                 regra_fake = [{
                     "id": "TESTE",
                     "pattern": teste_regex,
@@ -337,15 +940,27 @@ with tab_regras:
                     "fields": ["mock"]
                 }]
                 texto_destacado = highlight_text(teste_texto, regra_fake, "mock")
-                st.markdown(f"**Visualização com Destaque:**  \n{texto_destacado}", unsafe_allow_html=True)
-                
+                st.markdown(f'<div class="editorial-text-box">{texto_destacado}</div>', unsafe_allow_html=True)
+
             except re.error as err:
-                st.error(f"❌ **Erro de Sintaxe na Regex:** `{err}`")
+                st.markdown(
+                    f'<div style="font-family: \'IBM Plex Mono\', monospace; font-size: 0.82rem; color: var(--ink-rejected-text); '
+                    f'background: var(--ink-rejected-bg); border: 1px solid var(--ink-rejected-border); padding: 6px 12px; '
+                    f'border-radius: 2px; margin: var(--sp-2) 0;">'
+                    f'Erro de Sintaxe Regex: {err}'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
 
-    st.markdown("---")
+    st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
-    # Editor de Regras Existentes
-    st.markdown("#### 📝 Editar Critérios Ativos")
+    # ── EDIÇÃO DOS CRITÉRIOS EXISTENTES ──
+    st.markdown("""
+    <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: var(--sp-3);">
+        Editar Critérios Ativos
+    </h4>
+    """, unsafe_allow_html=True)
+
     rules_to_delete = []
 
     for i, rule in enumerate(st.session_state.rules):
@@ -355,15 +970,15 @@ with tab_regras:
         rule_pattern = rule.get("pattern", "")
         rule_fields = rule.get("fields", ["title", "abstract", "author_keywords", "keywords"])
 
-        tipo_icone = "❌ Exclusão" if rule_type == "exclusion" else "✅ Inclusão"
-        with st.expander(f"📌 {rule_id}: {rule_name} ({tipo_icone})", expanded=False):
+        tipo_badge = "Exclusão" if rule_type == "exclusion" else "Inclusão"
+        with st.expander(f"[{rule_id}] {rule_name} — {tipo_badge}", expanded=False):
             c1, c2 = st.columns([1, 2])
             with c1:
-                new_id = st.text_input("ID do Critério", value=rule_id, key=f"id_{i}")
+                new_id = st.text_input("Identificador (ID)", value=rule_id, key=f"id_{i}")
                 new_type = st.selectbox(
                     "Tipo de Ação",
                     options=["exclusion", "inclusion"],
-                    format_func=lambda x: "❌ Exclusão (Se encontrar, descarta)" if x == "exclusion" else "✅ Inclusão (Se não encontrar, descarta)",
+                    format_func=lambda x: "Exclusão (Se encontrar no texto, descarta)" if x == "exclusion" else "Inclusão (Se não encontrar, descarta)",
                     index=0 if rule_type == "exclusion" else 1,
                     key=f"type_{i}"
                 )
@@ -371,20 +986,19 @@ with tab_regras:
                 new_name = st.text_input("Nome Descritivo", value=rule_name, key=f"name_{i}")
                 new_pattern = st.text_area("Expressão Regular (Regex)", value=rule_pattern, key=f"pattern_{i}", height=68)
 
-            # Seleção de campos
             available_fields = ["title", "abstract", "author_keywords", "keywords"]
             for col in columns_list:
                 if col not in available_fields:
                     available_fields.append(col)
 
             new_fields = st.multiselect(
-                "Pesquisar nos Campos",
+                "Campos Inspecionados",
                 options=available_fields,
                 default=[f for f in rule_fields if f in available_fields],
                 key=f"fields_{i}"
             )
 
-            if st.button(f"🗑️ Excluir Critério {rule_id}", key=f"del_{i}", type="secondary"):
+            if st.button(f"Excluir Critério {rule_id}", key=f"del_{i}", type="secondary"):
                 rules_to_delete.append(i)
 
             st.session_state.rules[i]["id"] = new_id
@@ -398,21 +1012,26 @@ with tab_regras:
             st.session_state.rules.pop(idx)
         st.rerun()
 
-    st.markdown("---")
+    st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
-    # Adicionar Novo Critério
-    st.markdown("#### ➕ Criar Novo Critério")
+    # ── ADICIONAR NOVO CRITÉRIO ──
+    st.markdown("""
+    <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: var(--sp-3);">
+        Adicionar Novo Critério
+    </h4>
+    """, unsafe_allow_html=True)
+
     with st.form("add_rule_form", clear_on_submit=True):
         c1, c2, c3 = st.columns([1, 2, 2])
         with c1:
             add_id = st.text_input("ID do Critério", placeholder="Ex: EX2 ou IN2")
         with c2:
-            add_name = st.text_input("Nome", placeholder="Ex: Artigos Fora do Escopo Temporal")
+            add_name = st.text_input("Nome", placeholder="Ex: Publicações de Workshop / Resumos Curtos")
         with c3:
             add_type = st.selectbox(
                 "Tipo de Critério",
                 options=["exclusion", "inclusion"],
-                format_func=lambda x: "❌ Exclusão" if x == "exclusion" else "✅ Inclusão"
+                format_func=lambda x: "Exclusão (Descarte)" if x == "exclusion" else "Inclusão (Obrigatório)"
             )
 
         add_pattern = st.text_area("Expressão Regular (Regex)", placeholder="Ex: short paper|extended abstract|poster|workshop")
@@ -421,9 +1040,9 @@ with tab_regras:
         for col in columns_list:
             if col not in available_fields:
                 available_fields.append(col)
-        add_fields = st.multiselect("Campos de Busca", options=available_fields, default=["title", "abstract"])
+        add_fields = st.multiselect("Campos Inspecionados", options=available_fields, default=["title", "abstract"])
 
-        submitted = st.form_submit_button("➕ Salvar Novo Critério", use_container_width=True)
+        submitted = st.form_submit_button("Cadastrar Critério", use_container_width=True)
         if submitted:
             if not add_id.strip() or not add_name.strip() or not add_pattern.strip():
                 st.error("Preencha o ID, Nome e Regex para cadastrar o critério.")
@@ -436,19 +1055,37 @@ with tab_regras:
                     "fields": add_fields
                 }
                 st.session_state.rules.append(new_rule)
-                st.success(f"Critério '{add_id}' cadastrado com sucesso!")
+                st.success(f"Critério '{add_id}' cadastrado com sucesso.")
                 st.rerun()
 
 
-# ── ABA 2: EXECUÇÃO & RESULTADOS ─────────────────────────────────────────────
+# ── ABA 2: EXECUÇÃO & DOSSIÊ DE SCREENING ─────────────────────────────────────
 with tab_execucao:
-    st.subheader("Processamento da Triagem")
+    st.markdown("""
+    <div style="margin-bottom: var(--sp-4);">
+        <h3 style="font-family: 'IBM Plex Serif', serif; font-size: 1.25rem; font-weight: 600; margin: 0 0 var(--sp-1) 0;">
+            Processamento & Auditoria de Triagem
+        </h3>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">
+            Execute a classificação em lote dos artigos e audite as decisões critério por critério.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if df_uploaded is None:
-        st.info("💡 Carregue uma planilha Excel ou CSV no painel lateral à esquerda para iniciar.")
+        st.markdown("""
+        <div style="background: var(--paper-surface); border: 1px dashed var(--card-border); padding: var(--sp-5); border-radius: var(--radius-md); text-align: center;">
+            <div style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: var(--sp-2);">
+                Nenhuma base carregada.
+            </div>
+            <div style="color: var(--text-dim); font-size: 0.84rem;">
+                Importe uma planilha (.xlsx, .xls ou .csv) no Painel de Setup à esquerda para iniciar o screening.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        if st.button("⚡ Executar Triagem Automática", type="primary", use_container_width=True):
-            with st.spinner("Processando e classificando artigos..."):
+        if st.button("Executar Triagem Automática", type="primary", use_container_width=True):
+            with st.spinner("Classificando publicações e consolidando decisões..."):
                 try:
                     resultado = executar_triagem(
                         df=df_uploaded,
@@ -458,63 +1095,99 @@ with tab_execucao:
                         estrategia_doi=estrategia_doi
                     )
                     st.session_state.resultados = resultado
-                    st.success("✅ Triagem concluída com sucesso!")
+                    st.success("Triagem concluída com sucesso.")
                 except Exception as e:
                     st.error(f"Erro no processamento da triagem: {e}")
 
-        # Exibição dos Resultados
+        # ── EXIBIÇÃO DE RESULTADOS ──
         if st.session_state.resultados is not None:
             res = st.session_state.resultados
             stats = res["stats"]
             aprovados = res["aprovados"]
             rejeitados = res["rejeitados"]
 
-            st.markdown("---")
+            st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
-            # ── Indicadores Métricos com Porcentagens ──
+            # ── PAINEL DE INDICADORES DE MÉTRICAS (HIERARQUIA VISUAL EM 2 NÍVEIS) ──
             col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
-            col_m1.metric("Total Inicial", stats["total_inicial"])
-            col_m2.metric("Duplicatas", stats["duplicatas_removidas"])
 
-            if estrategia_doi == "remove":
-                col_m3.metric("Sem DOI (Excluídos)", stats["sem_doi"])
-            else:
-                col_m3.metric("Sem DOI (Marcados)", stats["sem_doi_flagged"])
+            with col_m1:
+                st.markdown(f"""
+                <div class="metric-grid-card metric-card-secondary">
+                    <div class="metric-label">Total Inicial</div>
+                    <div class="metric-value-mono">{stats['total_inicial']}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: var(--sp-1);">Registros brutos</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            col_m4.metric(
-                "Aprovados",
-                stats["aprovados"],
-                delta=f"{stats.get('taxa_aprovacao_pct', 0)}% do total",
-                delta_color="normal"
-            )
-            col_m5.metric(
-                "Rejeitados",
-                stats["rejeitados"],
-                delta=f"{stats.get('taxa_rejeicao_pct', 0)}% do total",
-                delta_color="inverse"
-            )
+            with col_m2:
+                st.markdown(f"""
+                <div class="metric-grid-card metric-card-secondary">
+                    <div class="metric-label">Duplicatas</div>
+                    <div class="metric-value-mono">{stats['duplicatas_removidas']}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: var(--sp-1);">Excluídas na limpeza</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            st.markdown("---")
+            with col_m3:
+                doi_val = stats["sem_doi"] if estrategia_doi == "remove" else stats["sem_doi_flagged"]
+                doi_lbl = "Sem DOI (Excluídos)" if estrategia_doi == "remove" else "Sem DOI (Marcados)"
+                st.markdown(f"""
+                <div class="metric-grid-card metric-card-secondary">
+                    <div class="metric-label">{doi_lbl}</div>
+                    <div class="metric-value-mono">{doi_val}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: var(--sp-1);">Política: {estrategia_doi}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            # ── Botões de Exportação ──
-            st.subheader("📥 Exportar Relatórios")
-            
-            # Botão de Destaque: Pacote Completo Multi-Abas
+            with col_m4:
+                tx_ap = stats.get("taxa_aprovacao_pct", 0)
+                st.markdown(f"""
+                <div class="metric-grid-card metric-card-approved">
+                    <div class="metric-label" style="color: var(--ink-approved-text);">Artigos Aprovados</div>
+                    <div class="metric-value-mono" style="color: var(--ink-approved-text);">{stats['aprovados']}</div>
+                    <div class="metric-delta-tag metric-delta-approved">
+                        {tx_ap}% de retenção
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col_m5:
+                tx_rej = stats.get("taxa_rejeicao_pct", 0)
+                st.markdown(f"""
+                <div class="metric-grid-card metric-card-rejected">
+                    <div class="metric-label" style="color: var(--ink-rejected-text);">Artigos Rejeitados</div>
+                    <div class="metric-value-mono" style="color: var(--ink-rejected-text);">{stats['rejeitados']}</div>
+                    <div class="metric-delta-tag metric-delta-rejected">
+                        {tx_rej}% de descarte
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
+
+            # ── BOTÕES DE EXPORTAÇÃO ──
+            st.markdown("""
+            <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: var(--sp-3);">
+                Exportação de Resultados
+            </h4>
+            """, unsafe_allow_html=True)
+
             multi_excel_data = gerar_pacote_completo_excel(aprovados, rejeitados, stats, st.session_state.rules)
             st.download_button(
-                label="📦 Baixar Relatório Completo Multi-Abas (Excel .xlsx)",
+                label="Baixar Pacote Consolidado Multi-Abas (Excel .xlsx)",
                 data=multi_excel_data,
                 file_name="triagem_rsl_consolidada_prisma.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 type="primary",
                 use_container_width=True
             )
-            
+
             c_d1, c_d2 = st.columns(2)
             with c_d1:
                 excel_ap = converter_df_para_excel(aprovados)
                 st.download_button(
-                    label="🟢 Baixar Apenas APROVADOS (Excel)",
+                    label="Baixar Apenas Artigos Aprovados (Excel)",
                     data=excel_ap,
                     file_name="artigos_aprovados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -523,44 +1196,59 @@ with tab_execucao:
             with c_d2:
                 excel_rej = converter_df_para_excel(rejeitados)
                 st.download_button(
-                    label="🔴 Baixar Apenas REJEITADOS (Excel)",
+                    label="Baixar Apenas Artigos Rejeitados (Excel)",
                     data=excel_rej,
                     file_name="artigos_rejeitados.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True
                 )
 
-            st.markdown("---")
+            st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
-            # ── Tabelas de Visualização ──
-            st.subheader("📋 Artigos Aprovados")
+            # ── TABELAS DE ARTIGOS ──
+            st.markdown("""
+            <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: var(--sp-2);">
+                Artigos Aprovados (Retidos)
+            </h4>
+            """, unsafe_allow_html=True)
+
             if not aprovados.empty:
                 st.dataframe(aprovados, use_container_width=True)
             else:
-                st.info("Nenhum artigo aprovado com as regras atuais.")
+                st.info("Nenhum artigo aprovado com a parametrização atual.")
 
-            st.subheader("📋 Artigos Rejeitados")
+            st.markdown("""
+            <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.1rem; font-weight: 600; margin-top: var(--sp-4); margin-bottom: var(--sp-2);">
+                Artigos Rejeitados (Descartados)
+            </h4>
+            """, unsafe_allow_html=True)
+
             if not rejeitados.empty:
-                # Filtro dinâmico por motivo de rejeição
-                motivos_unicos = ["(Todos os Motivos)"]
+                motivos_unicos = ["(Todos os Critérios)"]
                 for r in st.session_state.rules:
                     motivos_unicos.append(r["id"])
-                    
+
                 filtro_motivo = st.selectbox("Filtrar Tabela por Critério Violado:", options=motivos_unicos)
-                if filtro_motivo != "(Todos os Motivos)":
+                if filtro_motivo != "(Todos os Critérios)":
                     df_rej_view = rejeitados[rejeitados["motivo_rejeicao"].str.contains(filtro_motivo, na=False)]
                 else:
                     df_rej_view = rejeitados
-                    
+
                 st.dataframe(df_rej_view, use_container_width=True)
             else:
                 st.info("Nenhum artigo rejeitado.")
 
-            st.markdown("---")
+            st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
-            # ── Inspetor Detalhado de Artigos ──
-            st.subheader("🔍 Inspetor & Diagnóstico Individual de Artigo")
-            st.caption("Selecione um artigo para auditar a ativação de cada critério e visualizar as correspondências no texto.")
+            # ── INSPETOR & DIAGNÓSTICO INDIVIDUAL (FICHA CATALOGRÁFICA) ──
+            st.markdown("""
+            <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.15rem; font-weight: 600; margin-bottom: var(--sp-1);">
+                Inspetor & Diagnóstico Individual de Artigo
+            </h4>
+            <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: var(--sp-3);">
+                Audite a ativação de cada critério e examine o texto original com grifo de marca-texto analítico.
+            </div>
+            """, unsafe_allow_html=True)
 
             ap_temp = aprovados.copy()
             ap_temp["status"] = "APROVADO"
@@ -573,109 +1261,149 @@ with tab_execucao:
 
             if not df_total.empty:
                 options_list = df_total.index.tolist()
-                def obter_label(idx):
+                def formatar_opcao_artigo(idx):
                     row_item = df_total.loc[idx]
                     status = row_item["status"]
                     title = str(row_item.get("title", "Sem Título"))
-                    short_title = title[:95] + "..." if len(title) > 95 else title
-                    icon = "🟢" if status == "APROVADO" else "🔴"
-                    return f"{icon} [{status}] {short_title}"
+                    short_title = title[:90] + "..." if len(title) > 90 else title
+                    return f"[{status}] {short_title}"
 
                 artigo_selecionado = st.selectbox(
-                    "Selecione o artigo para inspeção:",
+                    "Selecione o artigo para inspeção detalhada:",
                     options=options_list,
-                    format_func=obter_label
+                    format_func=formatar_opcao_artigo
                 )
 
                 if artigo_selecionado is not None:
                     row = df_total.loc[artigo_selecionado]
                     status_val = row["status"]
+                    is_approved = (status_val == "APROVADO")
+                    stamp_class = "audit-stamp-approved" if is_approved else "audit-stamp-rejected"
 
-                    with st.container(border=True):
-                        c_stat, c_info = st.columns([1, 4])
-                        with c_stat:
-                            if status_val == "APROVADO":
-                                st.markdown('<div class="badge-approved">🟢 APROVADO</div>', unsafe_allow_html=True)
-                            else:
-                                st.markdown(f'<div class="badge-rejected">🔴 REJEITADO</div>', unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="catalog-card">
+                        <div class="catalog-card-header">
+                            <div>
+                                <h3 class="catalog-article-title">{row.get('title', 'Sem Título')}</h3>
+                            </div>
+                            <div>
+                                <span class="audit-stamp {stamp_class}">
+                                    {status_val}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="catalog-meta-strip">
+                            <div class="catalog-meta-item">Autor(es): <strong>{row.get('author', 'N/A')}</strong></div>
+                            <div class="catalog-meta-item">Ano: <strong>{row.get('year', 'N/A')}</strong></div>
+                            <div class="catalog-meta-item">DOI: <strong>{row.get('doi', 'N/A')}</strong></div>
+                            <div class="catalog-meta-item">Periódico/Veículo: <strong>{row.get('journal', 'N/A')}</strong></div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
-                        st.markdown(f"### {row.get('title', 'Sem Título')}")
+                    # Checklist de Auditoria Compacto
+                    st.markdown("""
+                    <div style="font-size: 0.84rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-top: var(--sp-3); margin-bottom: var(--sp-2);">
+                        Auditoria Critério a Critério
+                    </div>
+                    <div class="audit-checklist">
+                    """, unsafe_allow_html=True)
 
-                        # Metadados
-                        c_auth, c_year, c_doi = st.columns(3)
-                        c_auth.write(f"**Autor(es):** {row.get('author', 'N/A')}")
-                        c_year.write(f"**Ano:** {row.get('year', 'N/A')}")
-                        c_doi.write(f"**DOI:** {row.get('doi', 'N/A')}")
+                    for r in st.session_state.rules:
+                        r_id = r["id"]
+                        r_name = r["name"]
+                        r_type = r["type"]
+                        r_fields = r.get("fields", ["title", "abstract", "author_keywords", "keywords"])
 
-                        st.markdown("---")
-                        st.markdown("#### 📋 Auditoria das Regras")
+                        existing_fields = [f for f in r_fields if f in row.index]
+                        consolidated = " ".join([str(row[f]) for f in existing_fields if pd.notna(row[f])])
 
-                        for r in st.session_state.rules:
-                            r_id = r["id"]
-                            r_name = r["name"]
-                            r_type = r["type"]
-                            r_fields = r.get("fields", ["title", "abstract", "author_keywords", "keywords"])
+                        pattern_str = r.get("pattern", "")
+                        matched = False
+                        if pattern_str.strip():
+                            try:
+                                pattern = re.compile(pattern_str, re.IGNORECASE | re.MULTILINE)
+                                matched = bool(pattern.search(consolidated))
+                            except Exception:
+                                pass
 
-                            existing_fields = [f for f in r_fields if f in row.index]
-                            consolidated = " ".join([str(row[f]) for f in existing_fields if pd.notna(row[f])])
+                        if r_type == "exclusion":
+                            violado = matched
+                            tag_text = "VIOLADO" if violado else "PASSOU"
+                            tag_class = "violated" if violado else "pass"
+                            desc_text = "Termos de exclusão detectados" if violado else "Nenhum termo indesejado"
+                        else:
+                            violado = not matched
+                            tag_text = "PASSOU" if not violado else "VIOLADO"
+                            tag_class = "pass" if not violado else "violated"
+                            desc_text = "Termos obrigatórios encontrados" if not violado else "Termos obrigatórios ausentes"
 
-                            pattern_str = r.get("pattern", "")
-                            matched = False
-                            if pattern_str.strip():
-                                try:
-                                    pattern = re.compile(pattern_str, re.IGNORECASE | re.MULTILINE)
-                                    matched = bool(pattern.search(consolidated))
-                                except Exception:
-                                    pass
+                        type_class = "exclusion" if r_type == "exclusion" else "inclusion"
 
-                            if r_type == "exclusion":
-                                if matched:
-                                    st.error(f"❌ **{r_id} - {r_name}** (Exclusão): **VIOLADO** (Termos de descarte detectados)")
-                                else:
-                                    st.success(f"✅ **{r_id} - {r_name}** (Exclusão): **PASSOU** (Nenhum termo indesejado)")
-                            else:
-                                if matched:
-                                    st.success(f"✅ **{r_id} - {r_name}** (Inclusão): **PASSOU** (Termos obrigatórios encontrados)")
-                                else:
-                                    st.error(f"❌ **{r_id} - {r_name}** (Inclusão): **VIOLADO** (Termos obrigatórios ausentes)")
+                        st.markdown(f"""
+                        <div class="audit-check-row">
+                            <div class="audit-check-left">
+                                <span class="audit-rule-code {type_class}">{r_id}</span>
+                                <span><strong>{r_name}</strong> <span style="color: var(--text-muted); font-size: 0.82rem;">({desc_text})</span></span>
+                            </div>
+                            <span class="audit-status-tag {tag_class}">{tag_text}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
 
-                        st.markdown("---")
-                        st.markdown("#### 📄 Destaque Visual nos Campos de Texto")
+                    st.markdown("</div>", unsafe_allow_html=True)
 
-                        h_title = highlight_text(str(row.get("title", "")), st.session_state.rules, "title")
-                        st.markdown(f"**Título:**  \n{h_title}", unsafe_allow_html=True)
-                        st.write("")
+                    # Destaque nos Campos de Texto
+                    st.markdown("""
+                    <div style="font-size: 0.84rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-top: var(--sp-4); margin-bottom: var(--sp-2);">
+                        Grifos Analíticos nos Campos de Texto
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                        if "abstract" in row.index and pd.notna(row["abstract"]):
-                            h_abstract = highlight_text(str(row["abstract"]), st.session_state.rules, "abstract")
-                            st.markdown(f"**Resumo (Abstract):**  \n<div style='text-align: justify; border-left: 3px solid #3b82f6; padding-left: 12px; margin-top: 4px;'>{h_abstract}</div>", unsafe_allow_html=True)
-                            st.write("")
+                    h_title = highlight_text(str(row.get("title", "")), st.session_state.rules, "title")
+                    st.markdown(f"<div style='font-size: 0.9rem; margin-bottom: var(--sp-2);'><strong>Título:</strong> {h_title}</div>", unsafe_allow_html=True)
 
-                        if "keywords" in row.index and pd.notna(row["keywords"]):
-                            h_kw = highlight_text(str(row["keywords"]), st.session_state.rules, "keywords")
-                            st.markdown(f"**Palavras-chave:** {h_kw}", unsafe_allow_html=True)
+                    if "abstract" in row.index and pd.notna(row["abstract"]):
+                        h_abstract = highlight_text(str(row["abstract"]), st.session_state.rules, "abstract")
+                        st.markdown(f"<strong>Resumo (Abstract):</strong><div class='editorial-text-box'>{h_abstract}</div>", unsafe_allow_html=True)
 
-                        if "author_keywords" in row.index and pd.notna(row["author_keywords"]):
-                            h_akw = highlight_text(str(row["author_keywords"]), st.session_state.rules, "author_keywords")
-                            st.markdown(f"**Palavras-chave do Autor:** {h_akw}", unsafe_allow_html=True)
+                    if "keywords" in row.index and pd.notna(row["keywords"]):
+                        h_kw = highlight_text(str(row["keywords"]), st.session_state.rules, "keywords")
+                        st.markdown(f"<div style='font-size: 0.88rem; margin-top: var(--sp-2);'><strong>Palavras-chave:</strong> {h_kw}</div>", unsafe_allow_html=True)
+
+                    if "author_keywords" in row.index and pd.notna(row["author_keywords"]):
+                        h_akw = highlight_text(str(row["author_keywords"]), st.session_state.rules, "author_keywords")
+                        st.markdown(f"<div style='font-size: 0.88rem; margin-top: var(--sp-1);'><strong>Palavras-chave do Autor:</strong> {h_akw}</div>", unsafe_allow_html=True)
+
+                    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ── ABA 3: ESTATÍSTICAS & FLUXO PRISMA 2020 ──────────────────────────────────
 with tab_estatisticas:
-    st.subheader("Relatório e Diagrama de Fluxo PRISMA 2020")
-    st.caption("Visão analítica da retenção e descarte de artigos para inclusão direta em sua publicação científica.")
+    st.markdown("""
+    <div style="margin-bottom: var(--sp-4);">
+        <h3 style="font-family: 'IBM Plex Serif', serif; font-size: 1.25rem; font-weight: 600; margin: 0 0 var(--sp-1) 0;">
+            Diagrama de Fluxo & Dossiê PRISMA 2020
+        </h3>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">
+            Indicadores quantitativos e sumário estruturado para citação direta em manuscritos científicos.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if st.session_state.resultados is None:
-        st.info("💡 Execute a triagem na aba 'Execução & Resultados' para carregar as métricas e o fluxo PRISMA.")
+        st.info("Execute a triagem na aba 'Execução & Dossiê de Screening' para gerar as estatísticas e o fluxo PRISMA.")
     else:
         res = st.session_state.resultados
         stats = res["stats"]
 
-        # ── GRÁFICO INTERATIVO DE FLUXO PRISMA (FUNIL) ──
-        st.markdown("### 📊 Funil de Seleção PRISMA")
-        
+        # ── GRÁFICO INTERATIVO DE FLUXO PRISMA (FUNIL DE RETENÇÃO ANALÍTICA) ──
+        st.markdown("""
+        <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: var(--sp-2);">
+            Funil de Seleção PRISMA 2020
+        </h4>
+        """, unsafe_allow_html=True)
+
         funnel_labels = [
-            f"1. Total Bruto ({stats['total_inicial']})",
+            f"1. Identificação Inicial ({stats['total_inicial']})",
             f"2. Pós-Deduplicação ({stats['total_inicial'] - stats['duplicatas_removidas']})",
             f"3. Elegibilidade ({stats['pos_limpeza']})",
             f"4. Aprovados ({stats['aprovados']})"
@@ -687,40 +1415,52 @@ with tab_estatisticas:
             stats["aprovados"]
         ]
 
+        # Gradiente monotônico analítico de retenção até a tinta de aprovação final
         fig_funnel = go.Figure(go.Funnel(
             y=funnel_labels,
             x=funnel_values,
             textinfo="value+percent initial",
             marker={
-                "color": ["#3b82f6", "#6366f1", "#8b5cf6", "#10b981"]
-            }
+                "color": ["#2E4A6B", "#243B55", "#1B2C3F", "#2F5A42"],
+                "line": {"color": "#211C16", "width": 1.5}
+            },
+            textfont=dict(family="IBM Plex Mono, monospace", size=11, color="#EDE7DB")
         ))
-        fig_funnel.update_layout(
-            margin=dict(l=20, r=20, t=20, b=20),
-            height=320,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)"
-        )
+        fig_funnel = aplicar_tema_plotly(fig_funnel)
+        fig_funnel.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=10))
         st.plotly_chart(fig_funnel, use_container_width=True)
 
-        st.markdown("---")
+        st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
 
         c_g1, c_g2 = st.columns([1, 1])
 
         with c_g1:
-            st.markdown("#### 🎯 Distribuição Final")
+            st.markdown("""
+            <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.05rem; font-weight: 600; margin-bottom: var(--sp-2);">
+                Distribuição Final
+            </h4>
+            """, unsafe_allow_html=True)
             fig_pie = px.pie(
                 values=[stats["aprovados"], stats["rejeitados"]],
                 names=["Aprovados", "Rejeitados"],
                 color=["Aprovados", "Rejeitados"],
-                color_discrete_map={"Aprovados": "#10b981", "Rejeitados": "#ef4444"},
-                hole=0.45
+                color_discrete_map={"Aprovados": "#2F5A42", "Rejeitados": "#7A2E28"},
+                hole=0.48
             )
-            fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300)
+            fig_pie.update_traces(
+                marker=dict(line=dict(color="#211C16", width=2)),
+                textfont=dict(family="IBM Plex Mono, monospace", size=12, color="#EDE7DB")
+            )
+            fig_pie = aplicar_tema_plotly(fig_pie)
+            fig_pie.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10))
             st.plotly_chart(fig_pie, use_container_width=True)
 
         with c_g2:
-            st.markdown("#### 🚫 Impacto por Critério")
+            st.markdown("""
+            <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.05rem; font-weight: 600; margin-bottom: var(--sp-2);">
+                Impacto por Critério de Descarte
+            </h4>
+            """, unsafe_allow_html=True)
             motivos_lista = []
             for rule in st.session_state.rules:
                 r_id = rule["id"]
@@ -739,27 +1479,41 @@ with tab_estatisticas:
                     y="Descartes",
                     hover_data=["Nome"],
                     color="Descartes",
-                    color_continuous_scale="Reds"
+                    color_continuous_scale=[
+                        [0.0, "#4A1D1A"],
+                        [0.5, "#7A2E28"],
+                        [1.0, "#9E3B33"]
+                    ]
                 )
-                fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300)
+                fig_bar.update_traces(
+                    marker=dict(line=dict(color="#38301F", width=1))
+                )
+                fig_bar = aplicar_tema_plotly(fig_bar)
+                fig_bar.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10))
                 st.plotly_chart(fig_bar, use_container_width=True)
             else:
                 st.info("Nenhum descarte por critério registrado.")
 
-        # Relatório Textual Formatado
-        st.markdown("---")
-        st.markdown("#### 📋 Relatório PRISMA 2020 Formatado para Cópia")
+        # ── DOSSIÊ PRISMA 2020: DOCUMENTO ESTRUTURADO PARA CÓPIA DIRETA ──
+        st.markdown('<div class="trail-divider"></div>', unsafe_allow_html=True)
+        st.markdown("""
+        <h4 style="font-family: 'IBM Plex Serif', serif; font-size: 1.15rem; font-weight: 600; margin-bottom: var(--sp-1);">
+            Dossiê PRISMA 2020 (Extrato de Auditoria)
+        </h4>
+        <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: var(--sp-3);">
+            Extrato padronizado para inclusão direta em tabelas e seções de metodologia de publicações científicas.
+        </div>
+        """, unsafe_allow_html=True)
 
         linhas_relatorio = [
-            "============================================================",
-            "RELATÓRIO DE TRIAGEM AUTOMÁTICA – FLUXO PRISMA 2020",
-            "============================================================",
-            f"1. Identificação Inicial   : {stats['total_inicial']} artigos",
-            f"2. Duplicatas Removidas    : {stats['duplicatas_removidas']} artigos",
-            f"3. Excluídos Sem DOI       : {stats['sem_doi']} artigos",
-            f"4. Sinalizados Sem DOI     : {stats['sem_doi_flagged']} artigos",
-            f"5. Elegibilidade Avaliada  : {stats['pos_limpeza']} artigos",
-            "------------------------------------------------------------",
+            "DOSSIÊ DE SCREENING BIBLIOGRÁFICO – FLUXO PRISMA 2020",
+            "────────────────────────────────────────────────────────────",
+            f"1. Identificação Inicial     : {stats['total_inicial']:>6} artigos",
+            f"2. Duplicatas Removidas      : {stats['duplicatas_removidas']:>6} artigos",
+            f"3. Excluídos Sem DOI         : {stats['sem_doi']:>6} artigos",
+            f"4. Sinalizados Sem DOI       : {stats['sem_doi_flagged']:>6} artigos",
+            f"5. Elegibilidade Avaliada    : {stats['pos_limpeza']:>6} artigos",
+            "────────────────────────────────────────────────────────────",
             "CRITÉRIOS DE DESCARTE:"
         ]
 
@@ -769,17 +1523,19 @@ with tab_estatisticas:
             r_type = rule["type"]
             count = stats["regra_stats"].get(r_id, 0)
             prefix = "Com Exclusão" if r_type == "exclusion" else "Sem Inclusão"
-            linhas_relatorio.append(f"  - {prefix} {r_id} ({r_name}): {count} artigos")
+            linhas_relatorio.append(f"  • {r_id:<6} ({prefix:<12} - {r_name}): {count:>5} artigos")
 
         linhas_relatorio.extend([
-            "============================================================",
-            f"TOTAL INCLUÍDOS / APROVADOS: {stats['aprovados']} ({stats.get('taxa_aprovacao_pct', 0)}%)",
-            f"TOTAL EXCLUÍDOS / REJEITADOS: {stats['rejeitados']} ({stats.get('taxa_rejeicao_pct', 0)}%)",
-            "============================================================"
+            "────────────────────────────────────────────────────────────",
+            f"TOTAL APROVADOS (INCLUÍDOS)  : {stats['aprovados']:>6} ({stats.get('taxa_aprovacao_pct', 0):>5.1f}%)",
+            f"TOTAL REJEITADOS (EXCLUÍDOS) : {stats['rejeitados']:>6} ({stats.get('taxa_rejeicao_pct', 0):>5.1f}%)",
+            "────────────────────────────────────────────────────────────"
         ])
 
+        texto_dossie = "\n".join(linhas_relatorio)
+
         st.text_area(
-            "Copie o sumário abaixo para o protocolo ou relatório da RSL:",
-            value="\n".join(linhas_relatorio),
-            height=300
+            "Copie o extrato abaixo para colar no manuscrito ou protocolo de RSL:",
+            value=texto_dossie,
+            height=280
         )
