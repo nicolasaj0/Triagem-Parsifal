@@ -576,26 +576,26 @@ def aplicar_tema_plotly(fig: go.Figure) -> go.Figure:
             size=12
         ),
         margin=dict(l=20, r=20, t=30, b=20),
-        xaxis=dict(
-            showgrid=True,
-            gridcolor="#2C251B",
-            zerolinecolor="#38301F",
-            tickfont=dict(family="IBM Plex Mono, monospace", color="#A89C8A", size=11),
-            titlefont=dict(color="#EDE7DB", size=12)
-        ),
-        yaxis=dict(
-            showgrid=True,
-            gridcolor="#2C251B",
-            zerolinecolor="#38301F",
-            tickfont=dict(family="IBM Plex Mono, monospace", color="#A89C8A", size=11),
-            titlefont=dict(color="#EDE7DB", size=12)
-        ),
         legend=dict(
             font=dict(family="IBM Plex Sans, sans-serif", color="#EDE7DB", size=11),
             bgcolor="rgba(33, 28, 22, 0.8)",
             bordercolor="#38301F",
             borderwidth=1
         )
+    )
+    fig.update_xaxes(
+        showgrid=True,
+        gridcolor="#2C251B",
+        zerolinecolor="#38301F",
+        tickfont=dict(family="IBM Plex Mono, monospace", color="#A89C8A", size=11),
+        title_font=dict(family="IBM Plex Sans, sans-serif", color="#EDE7DB", size=12)
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="#2C251B",
+        zerolinecolor="#38301F",
+        tickfont=dict(family="IBM Plex Mono, monospace", color="#A89C8A", size=11),
+        title_font=dict(family="IBM Plex Sans, sans-serif", color="#EDE7DB", size=12)
     )
     return fig
 
